@@ -15,6 +15,9 @@ class CreateStoriesTable extends Migration
     {
         Schema::create('stories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->comment('Foreign key to the table users from story table');
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->string('path',200)->comment('picture path of the story');
             $table->timestamps();
         });
     }
