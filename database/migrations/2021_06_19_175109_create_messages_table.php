@@ -15,6 +15,12 @@ class CreateMessagesTable extends Migration
     {
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('from_id')->comment('user id of the user who sent the message');
+            $table->unsignedBigInteger('to_id')->comment('user id of the user who will receive message');
+            $table->foreign('from_id')->references('id')->on('users');
+            $table->foreign('to_id')->references('id')->on('users');
+            $table->text('text')->comment('message text who have been sent');
+            $table->boolean('is_read')->comment('if the message had received to the receiver');
             $table->timestamps();
         });
     }
