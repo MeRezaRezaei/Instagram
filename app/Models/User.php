@@ -47,10 +47,26 @@ class User extends Authenticatable
 
 
     public function following(){
-        return $this->hasMany(Follows::class,'following_id','id');
+        //return $this->hasMany(Follows::class,'following_id','id');
+        return $this->belongsToMany(
+            User::class,
+            'follows',
+            'following_id',
+            'follower_id',
+            'id',
+            'id'
+        );
     }
     public function followers(){
-        return $this->hasMany(Follows::class,'follower_id','id');
+        //return $this->hasMany(Follows::class,'follower_id','id');
+        return $this->belongsToMany(
+            User::class,
+            'follows',
+            'follower_id',
+            'following_id',
+            'id',
+            'id'
+        );
     }
 
     public function sent_messages(){
@@ -73,7 +89,15 @@ class User extends Authenticatable
 
 
     public function user_likes_posts(){
-        return $this->hasManyThrough(Posts::class,Likes::class,'user_id','id','id','post_id');
+        //return $this->hasManyThrough(Posts::class,Likes::class,'user_id','id','id','post_id');
+        return $this->belongsToMany(
+            Posts::class,
+            'likes',
+            'post_id',
+            'user_id',
+            'id',
+            'id'
+        );
     }
 
     public function comments(){

@@ -25,7 +25,15 @@ class Posts extends Model
     }
 
     public function post_likes_users(){
-        return $this->hasManyThrough(User::class,Likes::class,'post_id','id','id','user_id');
+        //return $this->hasManyThrough(User::class,Likes::class,'post_id','id','id','user_id');
+        return $this->belongsToMany(
+            User::class,
+            'likes',
+            'post_id',
+            'user_id',
+            'id',
+            'id'
+        )->as('comments');
     }
 
     public function comments(){
