@@ -28,4 +28,8 @@ class Posts extends Model
         return $this->hasManyThrough(User::class,Likes::class,'post_id','id','id','user_id');
     }
 
+    public function comments(){
+        return $this->hasMany(Comments::class,'post_id','id');
+    }
+
 }
