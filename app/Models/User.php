@@ -70,4 +70,9 @@ class User extends Authenticatable
     public function likes(){
         return $this->hasMany(Likes::class,'user_id','id');
     }
+
+
+    public function user_likes_posts(){
+        return $this->hasManyThrough(Posts::class,Likes::class,'user_id','id','id','post_id');
+    }
 }

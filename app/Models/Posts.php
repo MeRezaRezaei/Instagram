@@ -24,4 +24,8 @@ class Posts extends Model
         return $this->hasMany(Likes::class,'post_id','id');
     }
 
+    public function post_likes_users(){
+        return $this->hasManyThrough(User::class,Likes::class,'post_id','id','id','user_id');
+    }
+
 }
