@@ -20,4 +20,8 @@ class Posts extends Model
     public function pics(){
         return $this->hasMany(Pictures::class,'post_id','id');
     }
+    public function likes(){
+        return $this->hasMany(Likes::class,'post_id','id');
+    }
+
 }
