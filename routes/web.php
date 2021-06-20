@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/RelTest',[\App\Http\Controllers\DataRelationTest::class,'index']);
+
 Route::get('/', function () {
     return view('welcome');
 });
