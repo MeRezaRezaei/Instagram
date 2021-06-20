@@ -32,4 +32,15 @@ class Posts extends Model
         return $this->hasMany(Comments::class,'post_id','id');
     }
 
+    public function post_comments_users(){
+        return $this->belongsToMany(
+            User::class,
+            'comments',
+            'user_id',
+            'post_id',
+            'id',
+            'id'
+        )->as('comments');
+    }
+
 }
