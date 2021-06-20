@@ -24,6 +24,13 @@ class Comments extends Model
         return $this->belongsTo(Posts::class,'post_id','id');
     }
 
+    public function replay_parent(){
+        return $this->belongsTo(Comments::class,'replay_to_id','id');
+    }
+
+    public function replay_child(){
+        return $this->hasOne(Comments::class,'replay_to_id','id');
+    }
 
 
 }
