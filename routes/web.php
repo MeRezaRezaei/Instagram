@@ -12,73 +12,83 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+
 Route::get('/RelTest',[\App\Http\Controllers\DataRelationTest::class,'index']);
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('registration',
+Route::post('registration',
     [\App\Http\Controllers\API::class,'registration']
 );
-Route::get('login',
-    [\App\Http\Controllers\API::class,'login']
-);
-Route::get('new_post',
+Route::match(['post'],'/login',[\App\Http\Controllers\API::class,'login']);
+//Route::post('login',
+//
+//);
+Route::middleware(['auth'])->group(function (){
+
+});
+
+Route::post('new_post',
     [\App\Http\Controllers\API::class,'new_post']
 );
-Route::get('new_story',
+Route::post('new_story',
     [\App\Http\Controllers\API::class,'new_story']
 );
-Route::get('send_dm',
+Route::post('send_dm',
     [\App\Http\Controllers\API::class,'send_dm']
 );
-Route::get('get_profile',
-    [\App\Http\Controllers\API::class,'get_profile']
+Route::post('get_user_profile',
+    [\App\Http\Controllers\API::class,'get_user_profile']
 );
-Route::get('set_profile',
-    [\App\Http\Controllers\API::class,'set_profile']
+Route::post('set_user_profile',
+    [\App\Http\Controllers\API::class,'set_user_profile']
 );
-Route::get('send_comment',
+Route::post('send_comment',
     [\App\Http\Controllers\API::class,'send_comment']
 );
-Route::get('increase_like',
-    [\App\Http\Controllers\API::class,'increase_like']
+Route::post('like',
+    [\App\Http\Controllers\API::class,'like']
 );
-Route::get('get_post',
+Route::post('get_post',
     [\App\Http\Controllers\API::class,'get_post']
 );
-Route::get('get_post_feed',
-    [\App\Http\Controllers\API::class,'get_post_feed']
-);
-Route::get('get_profile_posts',
-    [\App\Http\Controllers\API::class,'get_profile_posts']
-);
-Route::get('get_dialog',
-    [\App\Http\Controllers\API::class,'get_dialog']
-);
-Route::get('get_story_feed',
-    [\App\Http\Controllers\API::class,'get_story_feed']
-);
-Route::get('delete_post',
-    [\App\Http\Controllers\API::class,'delete_post']
-);
-Route::get('follow',
+
+Route::post('follow',
     [\App\Http\Controllers\API::class,'follow']
 );
-Route::get('unfollow',
+Route::post('unfollow',
     [\App\Http\Controllers\API::class,'unfollow']
 );
-Route::get('delete_comment',
+
+Route::post('get_post_feed',
+    [\App\Http\Controllers\API::class,'get_post_feed']
+);
+Route::post('get_profile_posts',
+    [\App\Http\Controllers\API::class,'get_profile_posts']
+);
+Route::post('get_dialog',
+    [\App\Http\Controllers\API::class,'get_dialog']
+);
+Route::post('get_story_feed',
+    [\App\Http\Controllers\API::class,'get_story_feed']
+);
+Route::post('delete_post',
+    [\App\Http\Controllers\API::class,'delete_post']
+);
+
+Route::post('delete_comment',
     [\App\Http\Controllers\API::class,'delete_comment']
 );
-Route::get('get_post_comments',
+Route::post('get_post_comments',
     [\App\Http\Controllers\API::class,'get_post_comments']
 );
-Route::get('get_following_lists',
+Route::post('get_following_lists',
     [\App\Http\Controllers\API::class,'get_following_lists']
 );
-Route::get('get_follower_lists',
+Route::post('get_follower_lists',
     [\App\Http\Controllers\API::class,'get_follower_lists']
 );
 
