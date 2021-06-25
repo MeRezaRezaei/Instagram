@@ -860,6 +860,10 @@ class API extends Controller
                 'errors'=>$Validate->errors()
             ]),400);
         }
+        DB::table('messages')->where([
+        ['from_id','=',$request->peer_id],
+            ['to_id','=',$this->LoggedInUserId]
+        ])->update(['is_read'=>true]);
         $dialogs = Messages::where([
             ['from_id','=',$this->LoggedInUserId],
             ['to_id','=',$request->peer_id]
@@ -874,6 +878,7 @@ class API extends Controller
                 'message'=>$dialog->text,
                 'created_at'=>$dialog->created_at,
                 'updated_at'=>$dialog->updated_at,
+                'is_read'=>$dialog->is_read,
                 'from'=>[
                     'id'=>$dialog->from->id,
                     'name'=>$dialog->from->name,
