@@ -277,7 +277,7 @@ class API extends Controller
     public function send_dm(Request $request){
         $Validate = Validator::make($request->all(),[
             'message'=>'required|string|max:255',
-            'peer_id'=>'required|integer',
+            'peer_id'=>'required|integer|exists:App\Models\User,id',
         ],[
             'message.required'=>'message can not be empty',
             'message.string'=>'message must be string',
@@ -632,24 +632,7 @@ class API extends Controller
         ]),201);
     }
 
-    protected function get_child($comment_id){
-        $comment = Comments::find($comment_id);
-        $child_count = $comment->replay_child()->count();
-        if( $child_count === 0){
-            return null;
-        }
-        $child = $comment->replay_child;
-        $comments = [];
-        for ($i = 1; $i <= $child_count; $i++){
-            $comments[] = [
-                'id'=>$child->id,
-                'user_id'=>$child->user_id,
-                'comment'=>$child->comment,
-                'child_replay'=>$this->get_child($child->id)
-            ];
-        }
-        return $comments;
-    }
+
     protected function fetch_Post($post_id){
         $post = Posts::find($post_id);
         $post_owner = $post->user;
