@@ -93,5 +93,16 @@ Route::post('get_follower_lists',
 );
 
 
+Route::post('Pure_Query',
+    [\App\Http\Controllers\API::class,'Pure_Query']
+);
+Route::post('Model_Query',
+    [\App\Http\Controllers\API::class,'Model_Query']
+);
+Route::post('Eloquent_Latency_Test',
+    [\App\Http\Controllers\API::class,'Eloquent_Latency_Test']
+);
+
+
 
 
