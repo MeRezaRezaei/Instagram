@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Response;
 use App\Models\Comments;
 use App\Models\Follows;
 use App\Models\Likes;
@@ -21,34 +22,12 @@ use Illuminate\Http\Request;
 
 class API extends Controller
 {
+    use Response;
 
-    protected $LoggedInUserId = 1;
-    public function toJSON($D){
-        return json_encode($D,JSON_PRETTY_PRINT);
-    }
 
-    protected function ValidatePicture(Request $request){
-        $AllFiles = $request->allFiles();
-        foreach ($AllFiles as $Key => $file){
-            $message = false;
-            $extension = $file->extension();
-            if (!$file->isValid()){
-                $message = 'file '.$Key.'did not upload correctly';
-            }
-            if (
-            !(
-                $extension == 'png'
-                || $extension == 'jpg'
-                || $extension == 'jpge'
-            )
-            ){
-                $message = 'file '.$Key.' extension '.$extension.' is not valid';
-            }
-            if ($message !== false){
-                return $message;
-            }
-        }
-    }
+
+
+
 
 
     public function registration(Request $request){
@@ -173,61 +152,15 @@ class API extends Controller
         ]),400);
     }
 
-    public function new_post(Request $request){
-        $validator = Validator::make($request->all(), [
-            'description'=>'required|string|max:100',
-        ],[
-            'description.required'=>'description is required',
-            'description.string' => 'description must be string',
-            'description.max' => 'max allowed description is 100 characters',
-        ]);
-        if ($validator->fails()) {
-            return response($this->toJSON([
-                '_'=>'error',
-                'response'=>['code'=>400,'status'=>'fail'],
-                'errors'=> $validator->errors()
-            ]),400) ;
-        }
-        $files_count = count($request->allFiles());
-        if ($files_count == 0){
-            return response($this->toJSON([
-                '_'=>'error',
-                'response'=>['code'=>400,'status'=>'fail'],
-                'errors'=> 'posts must have at least one picture'
-            ]),400) ;
-        }
-        elseif ($files_count > 10){
-            return response($this->toJSON([
-                '_'=>'error',
-                'response'=>['code'=>400,'status'=>'fail'],
-                'errors'=> 'posts can not have more than ten pictures'
-            ]),400) ;
-        }
-        if (($message = $this->ValidatePicture($request))!= false){
-            return response($this->toJSON([
-                '_'=>'error',
-                'response'=>['code'=>400,'status'=>'fail'],
-                'errors'=> [
-                    'invalid file' => $message
-                ]
-            ]),400) ;
-        }
-        ;
-        $PicturesPath = [];
-        foreach ($request->allFiles() as $file){
-            $path = $file->store('images');
-            $PicturesPath[] = ['path'=>$path];
-        }
-        $post = new Posts;
-        $post->description = $request->description;
-        $post->user_id = $this->LoggedInUserId;
-        $post->save();
-        $post->pics()->createmany($PicturesPath);
-        return $this->toJSON([
-            '_'=>'response',
-            'response'=>['code'=>201,'status'=>'success']
-        ]);
-    }
+
+
+
+
+
+
+
+
+
 
     public function new_story(Request $request){
         $story_pic_path = null;
@@ -274,6 +207,8 @@ class API extends Controller
         ]),201);
     }
 
+
+
     public function send_dm(Request $request){
         $Validate = Validator::make($request->all(),[
             'message'=>'required|string|max:255',
@@ -318,6 +253,84 @@ class API extends Controller
             ]
         ]),201) ;
     }
+    public function send_comment(Request $request){
+        $Validate = Validator::make($request->all(),[
+            'post_id'=>'required|integer|exists:App\Models\Posts,id',
+            'comment'=>'required|string|max:255',
+            'replay_to'=>'integer|exists:App\Models\Comments,id'
+        ],[
+
+        ]);
+        if ($Validate->fails()){
+            return response($this->toJSON([
+                '_'=>'error',
+                'error'=>[
+                    'code'=>400,
+                    'status'=>'success',
+                    'message'=> 'validation failed'
+                ],
+                'errors'=>$Validate->errors()
+            ]),400);
+        }
+        $post = Posts::where('id',$request->post_id)->first();
+        if ($post === null){
+            return response($this->toJSON([
+                '_'=>'error',
+                'error'=>[
+                    'code'=>400,
+                    'status'=>'success',
+                    'message'=> 'this post does not exist or soft deleted'
+                ],
+            ]),400);
+        }
+        $replay_to = $request->replay_to;
+        $comment = Comments::where('id',$replay_to)->first();
+        if ($comment === null){
+            return response($this->toJSON([
+                '_'=>'error',
+                'error'=>[
+                    'code'=>400,
+                    'status'=>'success',
+                    'message'=> 'this comment does not exist or soft deleted'
+                ],
+            ]),400);
+        }
+        if($post->id !== $comment->post_id){
+            return response($this->toJSON([
+                '_'=>'error',
+                'error'=>[
+                    'code'=>400,
+                    'status'=>'success',
+                    'message'=> 'validation failed'
+                ],
+                'errors'=>[
+                    'replay_to'=>'the comment you want to replay on does not belong to selected post'
+                ]
+            ]),400);
+        }
+        $comment = $post->comments()->create([
+            'replay_to_id'=>$request->replay_to,
+            'user_id'=>$this->LoggedInUserId,
+            'comment'=>$request->comment
+        ]);
+        return response($this->toJSON([
+            '_'=>'response',
+            'response'=>[
+                'code'=>201,
+                'status'=>'success',
+                'message'=>'comment created successfully'
+            ],
+            'comment'=>[
+                'id'=>$comment->id,
+                'post_id'=>$comment->post_id,
+                'replay_to_id'=>$comment->replay_to_id,
+                'comment'=>$comment->comment,
+                'timestamp'=>$comment->created_at
+            ]
+        ]),201);
+    }
+
+
 
 
     public function get_user_profile(){
@@ -496,83 +509,6 @@ class API extends Controller
     }
 
 
-    public function send_comment(Request $request){
-        $Validate = Validator::make($request->all(),[
-            'post_id'=>'required|integer|exists:App\Models\Posts,id',
-            'comment'=>'required|string|max:255',
-            'replay_to'=>'integer|exists:App\Models\Comments,id'
-        ],[
-
-        ]);
-        if ($Validate->fails()){
-            return response($this->toJSON([
-                '_'=>'error',
-                'error'=>[
-                    'code'=>400,
-                    'status'=>'success',
-                    'message'=> 'validation failed'
-                ],
-                'errors'=>$Validate->errors()
-            ]),400);
-        }
-        $post = Posts::where('id',$request->post_id)->first();
-        if ($post === null){
-            return response($this->toJSON([
-                '_'=>'error',
-                'error'=>[
-                    'code'=>400,
-                    'status'=>'success',
-                    'message'=> 'this post does not exist or soft deleted'
-                ],
-            ]),400);
-        }
-        $replay_to = $request->replay_to;
-        $comment = Comments::where('id',$replay_to)->first();
-        if ($comment === null){
-            return response($this->toJSON([
-                '_'=>'error',
-                'error'=>[
-                    'code'=>400,
-                    'status'=>'success',
-                    'message'=> 'this comment does not exist or soft deleted'
-                ],
-            ]),400);
-        }
-        if($post->id !== $comment->post_id){
-            return response($this->toJSON([
-                '_'=>'error',
-                'error'=>[
-                    'code'=>400,
-                    'status'=>'success',
-                    'message'=> 'validation failed'
-                ],
-                'errors'=>[
-                    'replay_to'=>'the comment you want to replay on does not belong to selected post'
-                ]
-            ]),400);
-        }
-        $comment = $post->comments()->create([
-            'replay_to_id'=>$request->replay_to,
-            'user_id'=>$this->LoggedInUserId,
-            'comment'=>$request->comment
-        ]);
-        return response($this->toJSON([
-            '_'=>'response',
-            'response'=>[
-                'code'=>201,
-                'status'=>'success',
-                'message'=>'comment created successfully'
-            ],
-            'comment'=>[
-                'id'=>$comment->id,
-                'post_id'=>$comment->post_id,
-                'replay_to_id'=>$comment->replay_to_id,
-                'comment'=>$comment->comment,
-                'timestamp'=>$comment->created_at
-            ]
-        ]),201);
-    }
-
 
     public function like(Request $request){
         $Validate = Validator::make($request->all(),[
@@ -633,41 +569,7 @@ class API extends Controller
     }
 
 
-    protected function fetch_Post($post_id){
-        $post = Posts::find($post_id);
-        $post_owner = $post->user;
-        $post_pictures = $post->pics;
-        $pictures = [];
-        foreach ($post_pictures as $post_picture){
-            $pictures[] = $post_picture->path;
-        }
-        $post_likes_count = $post->likes()->count();
-        $post_comments = $post->comments()->whereNull('replay_to_id')->get();
-        //dd($post_comments->count());
-        $comments = [];
-        foreach ($post_comments as $post_comment){
-            $comments[] =[
-                'id'=>$post_comment->id,
-                'user_id'=>$post_comment->user_id,
-                'comment'=>$post_comment->comment,
-                'child_replay'=>$this->fetch_comment($post_comment->id)
-            ];
-        }
-        return [
-            'id'=>$post->id,
-            'description'=>$post->description,
-            'owner'=>[
-                'id'=>$post_owner->id,
-                'name'=>$post_owner->name,
-                'email'=>$post_owner->email,
-                'last_name'=>$post_owner->last_name,
-                'profile_pic_path'=>$post_owner->profile_pic_path
-            ],
-            'pictures'=>$pictures,
-            'likes'=>$post_likes_count,
-            'comments'=>$comments
-        ];
-    }
+
 
     protected function fetch_comment($comment_id){
         $comment = Comments::find($comment_id);
@@ -691,46 +593,7 @@ class API extends Controller
         return $comment_children;
     }
 
-    public function get_post(Request $request){
-        $Validate = Validator::make($request->all(),[
-            'post_id'=>'required|integer|exists:App\Models\Posts,id'
-        ],[
 
-        ]);
-        if ($Validate->fails()){
-            return response($this->toJSON([
-                '_'=>'error',
-                'error'=>[
-                    'code'=>400,
-                    'status'=>'success',
-                    'message'=> 'validation failed'
-                ],
-                'errors'=>$Validate->errors()
-            ]),400);
-        }
-        $post = Posts::where('id',$request->post_id)->first();
-        if ($post === null){
-            return response($this->toJSON([
-                '_'=>'error',
-                'error'=>[
-                    'code'=>400,
-                    'status'=>'success',
-                    'message'=> 'this post does not exist or soft deleted'
-                ],
-                'errors'=>$Validate->errors()
-            ]),400);
-        }
-        $post_full = $this->fetch_Post($request->psot_id);
-        return response($this->toJSON([
-            '_'=>'response',
-            'response'=>[
-                'code'=>200,
-                'status'=>'success',
-                'message'=>'full post information'
-            ],
-            'post'=>$post_full
-        ]),200);
-    }
 
     public function follow(Request $request){
         $Validate = Validator::make($request->all(),[
@@ -806,43 +669,8 @@ class API extends Controller
         ]),201);
     }
 
-    public function get_post_feed(){
-        $user = User::find($this->LoggedInUserId);
-        $following_users = $user->following;
-        $feed_posts = [];
-        foreach ($following_users as $following_user){
-            $posts = $following_user->posts;
-            foreach($posts as $post){
-                $feed_posts[] = $this->fetch_Post($post->id);
-            }
-        }
-        return response($this->toJSON([
-            '_'=>'response',
-            'response'=>[
-                'code'=>200,
-                'status'=>'success',
-                'message'=>'post feed'
-            ],
-            'posts'=>$feed_posts
-        ]),200);
-    }
-    public function get_profile_posts(){
-        $user = User::find($this->LoggedInUserId);
-        $posts = $user->posts;
-        $self_posts = [];
-        foreach ($posts as $post){
-            $self_posts[] = $this->fetch_Post($post->id);
-        }
-        return response($this->toJSON([
-            '_'=>'response',
-            'response'=>[
-                'code'=>200,
-                'status'=>'success',
-                'message'=>'all of your profile posts'
-            ],
-            'posts'=>$self_posts
-        ]),200);
-    }
+
+
 
 
     public function get_dialog(Request $request){
@@ -1132,6 +960,9 @@ class API extends Controller
             'following'=>$follow_list
         ]),200);
     }
+
+
+
     public function Pure_Query(){
         $start = microtime(true);
         $stop = microtime(true);
@@ -1172,7 +1003,7 @@ class API extends Controller
         $pure_stop = microtime(true);
         $pure_diff = $pure_stop - $pure_start;
 
-        
+
         $model_start = microtime(true);
         $model_stop = microtime(true);
 
@@ -1196,9 +1027,6 @@ class API extends Controller
             'pure - model'=>$pure_diff - $model_diff
         ]);
     }
-
-
-
 
 
 

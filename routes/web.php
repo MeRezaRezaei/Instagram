@@ -32,8 +32,19 @@ Route::middleware(['auth'])->group(function (){
 });
 
 Route::post('new_post',
-    [\App\Http\Controllers\API::class,'new_post']
+    [\App\Http\Controllers\Post::class,'create_new_post']
 );
+Route::post('get_post',
+    [\App\Http\Controllers\Post::class,'get_post']
+);
+Route::post('get_post_feed',
+    [\App\Http\Controllers\Post::class,'get_post_feed']
+);
+Route::post('get_profile_posts',
+    [\App\Http\Controllers\Post::class,'get_profile_posts']
+);
+
+
 Route::post('new_story',
     [\App\Http\Controllers\API::class,'new_story']
 );
@@ -52,9 +63,6 @@ Route::post('send_comment',
 Route::post('like',
     [\App\Http\Controllers\API::class,'like']
 );
-Route::post('get_post',
-    [\App\Http\Controllers\API::class,'get_post']
-);
 
 Route::post('follow',
     [\App\Http\Controllers\API::class,'follow']
@@ -63,12 +71,7 @@ Route::post('unfollow',
     [\App\Http\Controllers\API::class,'unfollow']
 );
 
-Route::post('get_post_feed',
-    [\App\Http\Controllers\API::class,'get_post_feed']
-);
-Route::post('get_profile_posts',
-    [\App\Http\Controllers\API::class,'get_profile_posts']
-);
+
 Route::post('get_dialog',
     [\App\Http\Controllers\API::class,'get_dialog']
 );
