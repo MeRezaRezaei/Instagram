@@ -22,6 +22,9 @@ class Follow extends Controller
             return $this->Make_Error($Validate->errors(),400)
                 ;
 
+        if ($request->user_id == $this->LoggedInUserId){
+            return $this->Make_Error('you can not follow yourself',400);
+        }
 
         $follow = Follows::firstOrCreate([
             'following_id'=>$request->user_id,
