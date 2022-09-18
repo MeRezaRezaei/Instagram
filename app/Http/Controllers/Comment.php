@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class Comment extends Controller
 {
-    use Response;
+    use Response,Fetch;
 
     public function get_post_comments(Request $request){
         $Validate  = Validator::make($request->all(),[
@@ -53,39 +53,6 @@ class Comment extends Controller
             200,
             $comments);
 
-    }
-
-    protected function fetch_comment($comment_id){
-        $comment = Comments::find($comment_id);
-        if ($comment_id === null)
-            return null
-                ;
-
-
-        $comment_child_count = $comment->replay_child()->count();
-        if ($comment_child_count === 0)
-            return null
-                ;
-
-
-        $children = $comment->replay_child()
-            ->where('post_id',$comment->post_id)
-            ->get();
-
-
-        $comment_children = [];
-        foreach ($children as $child){
-            $comment_children[] = [
-                'id'=>$child->id,
-                'user_id'=>$child->user_id,
-                'post_id'=>$child->post_id,
-                'comment'=>$child->comment,
-                'child_replay'=>$this->fetch_comment($child->id)
-            ];
-        }
-
-
-        return $comment_children;
     }
 
     public function delete_comment(Request $request){

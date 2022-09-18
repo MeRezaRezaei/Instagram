@@ -13,7 +13,7 @@ use App\Actions\Response;
 class Post extends Controller
 {
 
-    use Response;
+    use Response,Fetch;
     
     // todo decide whether validate photo is in the same level of abstraction as create new post
     protected function ValidatePicture(Request $request){
@@ -38,6 +38,7 @@ class Post extends Controller
             }
         }
     }
+
     public function create_new_post(Request $request){
         $validator = Validator::make($request->all(),[
             'description'=>'required|string|max:100',
@@ -91,7 +92,6 @@ class Post extends Controller
         201
         );
     }
-
 
     public function get_post(Request $request){
         $Validate = Validator::make($request->all(),[
@@ -157,55 +157,6 @@ class Post extends Controller
             200,
             $self_posts);
     }
-
-
-    protected function fetch_Post($post_id){
-        $post = Posts::find($post_id);
-        $post_owner = $post->user;
-        $post_pictures = $post->pics;
-
-
-        $pictures = [];
-        foreach ($post_pictures as $post_picture)
-        $pictures[] = $post_picture->path
-        ;
-
-
-        $post_likes_count = $post->likes()->count();
-
-
-        $post_comments = $post->comments()
-        ->whereNull('replay_to_id')
-        ->get();
-
-
-        $comments = [];
-        foreach ($post_comments as $post_comment)
-        $comments[] =[
-            'id'=>$post_comment->id,
-            'user_id'=>$post_comment->user_id,
-            'comment'=>$post_comment->comment,
-            'child_replay'=>$this->fetch_comment($post_comment->id)
-        ]
-        ;
-
-        return [
-            'id'=>$post->id,
-            'description'=>$post->description,
-            'owner'=>[
-                'id'=>$post_owner->id,
-                'name'=>$post_owner->name,
-                'email'=>$post_owner->email,
-                'last_name'=>$post_owner->last_name,
-                'profile_pic_path'=>$post_owner->profile_pic_path
-            ],
-            'pictures'=>$pictures,
-            'likes'=>$post_likes_count,
-            'comments'=>$comments
-        ];
-    }
-
-
 
     public function delete_post(Request $request){
         $Validate = Validator::make($request->all(),[
